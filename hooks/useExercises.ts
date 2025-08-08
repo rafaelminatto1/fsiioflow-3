@@ -32,12 +32,12 @@ export const useExercises = () => {
 
   const uniqueBodyParts = useMemo(() => {
     const allParts = exercises.flatMap(ex => ex.bodyParts);
-    return [...new Set(allParts)].sort((a, b) => a.localeCompare(b));
+    return [...new Set<string>(allParts)].sort((a, b) => a.localeCompare(b));
   }, [exercises]);
 
   const uniqueEquipment = useMemo(() => {
     const allEquipment = exercises.flatMap(ex => ex.equipment);
-    return [...new Set(allEquipment)].sort((a, b) => a.localeCompare(b));
+    return [...new Set<string>(allEquipment)].sort((a, b) => a.localeCompare(b));
   }, [exercises]);
 
   const addExercise = async (exerciseData: Omit<Exercise, 'id'>) => {

@@ -1,9 +1,19 @@
 // services/optimized/appointmentService.ts - High-performance appointment service with caching
-import { eq, desc, asc, count, and, gte, lte, sql, inArray } from 'drizzle-orm';
+import { eq, desc, asc, count, and, gte, lte, sql } from 'drizzle-orm';
 import { db, logQueryMetrics } from '../../lib/database';
 import { appointments, patients, therapists } from '../../lib/schema';
 import { cacheQuery, CACHE_TTL, invalidateAppointmentCache } from '../../lib/redis';
-import type { Appointment } from '../types';
+import type { Appointment, AppointmentType } from '../../types';
+
+function mapDbTypeToAppType(dbType: string): AppointmentType {
+  switch (dbType) {
+    case 'Avaliação': return 'Avaliação' as AppointmentType;
+    case 'Sessão': return 'Sessão' as AppointmentType;
+    case 'Retorno': return 'Retorno' as AppointmentType;
+    case 'Teleconsulta': return 'Teleconsulta' as AppointmentType;
+    default: return 'Sessão' as AppointmentType;
+  }
+}
 
 // Enhanced appointment type with related data
 export interface EnrichedAppointment extends Appointment {
@@ -142,8 +152,11 @@ export const getAppointments = async ({
           .where(whereClause);
         
         const hasNextPage = appointmentsResult.length > safeLimit;
-        const appointmentsData = hasNextPage ? appointmentsResult.slice(0, safeLimit) : appointmentsResult;
-        const nextCursor = hasNextPage ? appointmentsData[appointmentsData.length - 1].id : null;
+        const appointmentsData = (hasNextPage ? appointmentsResult.slice(0, safeLimit) : appointmentsResult).map(row => ({
+          ...row,
+          type: mapDbTypeToAppType(row.type as unknown as string),
+        })) as unknown as EnrichedAppointment[];
+        const nextCursor = hasNextPage ? (appointmentsData[appointmentsData.length - 1] as any).id : null;
         
         return {
           appointments: appointmentsData,
@@ -211,7 +224,7 @@ export const getAppointmentsByPatientId = async (
           .orderBy(desc(appointments.startTime))
           .limit(limit);
         
-        return result;
+        return (result as any[]).map(r => ({ ...r, type: mapDbTypeToAppType(r.type as string) })) as EnrichedAppointment[];
       });
     }
   );
@@ -229,10 +242,10 @@ export const saveAppointment = async (
 ): Promise<Appointment> => {
   return await withPerformanceLogging('saveAppointment', async () => {
     const result = await db.insert(appointments)
-      .values(appointmentData)
+      .values(appointmentData as any)
       .returning();
     
-    const newAppointment = result[0];
+    const newAppointment = result[0] as any as Appointment;
     
     // Invalidate relevant caches
     await invalidateAppointmentCache(appointmentData.patientId, appointmentData.therapistId);
@@ -249,9 +262,10 @@ export const updateAppointment = async (
   return await withPerformanceLogging('updateAppointment', async () => {
     const result = await db.update(appointments)
       .set({
-        ...updates,
+        ...(updates as any),
+        value: (updates.value as any) ?? undefined,
         updatedAt: sql`NOW()`,
-      })
+      } as any)
       .where(eq(appointments.id, id))
       .returning();
     
@@ -259,12 +273,23 @@ export const updateAppointment = async (
       throw new Error('Appointment not found');
     }
     
-    const updatedAppointment = result[0];
-    
+    const updated = result[0];
+
+    // Fetch patient fields to satisfy Appointment shape used in app
+    const related = await db
+      .select({ patientName: patients.name, patientAvatarUrl: patients.avatarUrl })
+      .from(patients)
+      .where(eq(patients.id, updated.patientId))
+      .limit(1);
+
     // Invalidate caches
-    await invalidateAppointmentCache(updatedAppointment.patientId, updatedAppointment.therapistId);
+    await invalidateAppointmentCache(updated.patientId, updated.therapistId);
     
-    return updatedAppointment;
+    return {
+      ...(updated as any),
+      patientName: related[0]?.patientName || '',
+      patientAvatarUrl: related[0]?.patientAvatarUrl || '',
+    } as any as Appointment;
   });
 };
 
@@ -439,7 +464,7 @@ export const getTodaysAppointments = async (): Promise<{
   );
   
   return {
-    appointments: data,
+    appointments: (data as any[]).map(r => ({ ...r, type: mapDbTypeToAppType(r.type as string) })) as EnrichedAppointment[],
     cacheHit,
     queryDuration: duration,
   };

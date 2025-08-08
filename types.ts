@@ -1,3 +1,4 @@
+import type { ReactNode, ElementType } from 'react';
 
 
 // --- User & Auth Types ---
@@ -14,7 +15,7 @@ export interface User {
   name: string;
   email: string;
   role: Role;
-  avatarUrl: string;
+  avatarUrl?: string;
   patientId?: string;
 }
 
@@ -407,7 +408,7 @@ export type Achievement = {
   name: string;
   description: string;
   unlocked: boolean;
-  icon: React.ElementType;
+  icon: ElementType;
 };
 
 export interface GamificationProgress {
@@ -425,7 +426,7 @@ export interface StatCardData {
   value: string;
   change?: string;
   changeType?: 'increase' | 'decrease';
-  icon: React.ReactNode;
+  icon: ReactNode;
 }
 
 export interface ToastMessage {

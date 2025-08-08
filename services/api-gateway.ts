@@ -68,8 +68,8 @@ class ApiGateway {
   private client: AxiosInstance;
   private config: ApiGatewayConfig;
   private metrics: Map<string, RequestMetrics> = new Map();
-  private requestInterceptors: Array<(config: AxiosRequestConfig) => AxiosRequestConfig> = [];
-  private responseInterceptors: Array<(response: AxiosResponse) => AxiosResponse> = [];
+  private requestInterceptors: Array<(config: any) => any> = [];
+  private responseInterceptors: Array<(response: any) => any> = [];
 
   constructor(config?: Partial<ApiGatewayConfig>) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -95,12 +95,12 @@ class ApiGateway {
   private setupInterceptors(): void {
     // Request interceptor
     this.client.interceptors.request.use(
-      (config) => {
+      (config: any) => {
         const requestId = this.generateRequestId();
-        config.headers = config.headers || {};
-        config.headers['X-Request-ID'] = requestId;
-        config.headers['X-Client-Version'] = '1.0.0';
-        config.headers['X-Timestamp'] = Date.now().toString();
+        config.headers = (config.headers as any) || ({} as any);
+        (config.headers as any)['X-Request-ID'] = requestId;
+        (config.headers as any)['X-Client-Version'] = '1.0.0';
+        (config.headers as any)['X-Timestamp'] = Date.now().toString();
 
         // Apply custom request interceptors
         this.requestInterceptors.forEach(interceptor => {
@@ -127,7 +127,7 @@ class ApiGateway {
 
     // Response interceptor
     this.client.interceptors.response.use(
-      (response) => {
+      (response: any) => {
         const requestId = response.config.headers?.['X-Request-ID'] as string;
 
         // Complete metrics tracking
@@ -149,7 +149,7 @@ class ApiGateway {
         return response;
       },
       async (error: AxiosError) => {
-        const requestId = error.config?.headers?.['X-Request-ID'] as string;
+        const requestId = (error.config as any)?.headers?.['X-Request-ID'] as string;
 
         // Complete metrics tracking for errors
         if (this.config.enableMetrics && requestId) {
@@ -262,7 +262,7 @@ class ApiGateway {
 
   // Transform Axios error to ApiError
   private transformError(error: AxiosError): ApiError {
-    const requestId = error.config?.headers?.['X-Request-ID'] as string;
+    const requestId = (error.config as any)?.headers?.['X-Request-ID'] as string;
 
     return {
       message: error.message || 'An unknown error occurred',
@@ -307,7 +307,7 @@ class ApiGateway {
 
     try {
       const response = await this.client.request<T>(axiosConfig);
-      const requestId = response.config.headers?.['X-Request-ID'] as string;
+      const requestId = (response.config.headers as any)?.['X-Request-ID'] as string;
       const duration = this.getRequestDuration(requestId);
 
       return {
@@ -325,12 +325,12 @@ class ApiGateway {
 
   // Add custom request interceptor
   addRequestInterceptor(interceptor: (config: AxiosRequestConfig) => AxiosRequestConfig): void {
-    this.requestInterceptors.push(interceptor);
+    this.requestInterceptors.push(interceptor as any);
   }
 
   // Add custom response interceptor
   addResponseInterceptor(interceptor: (response: AxiosResponse) => AxiosResponse): void {
-    this.responseInterceptors.push(interceptor);
+    this.responseInterceptors.push(interceptor as any);
   }
 
   // Get performance metrics
@@ -383,6 +383,5 @@ class ApiGateway {
 // Create singleton instance
 export const apiGateway = new ApiGateway();
 
-// Export types and utilities
-export type { ApiRequest, ApiResponse, ApiError, RequestMetrics };
+// Export class
 export { ApiGateway };

@@ -277,7 +277,7 @@ const AgendaPage: React.FC = () => {
     );
   };
   
-  const renderGrid = (cols: any[], colRenderer: (col: any, index: number) => React.ReactNode) => (
+  const renderGrid = (cols: (Date | Therapist)[], colRenderer: (col: any, index: number) => React.ReactNode) => (
      <div ref={gridRef} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
           className={`grid grid-cols-[3.5rem_repeat(${cols.length},minmax(0,1fr))]`}>
         {/* Time column */}
@@ -292,12 +292,16 @@ const AgendaPage: React.FC = () => {
     </div>
   );
   
-  const renderWeekView = () => renderGrid(weekDays, (day, index) => (
-      <GridColumn key={day.toISOString()} date={day} />
+  const renderWeekView = () => renderGrid(weekDays, (day: Date, index) => (
+      <React.Fragment key={day.toISOString()}>
+        <GridColumn date={day} />
+      </React.Fragment>
   ));
 
-  const renderDayView = () => renderGrid(allTherapists, (therapist, index) => (
-      <GridColumn key={therapist.id} date={currentDate} therapist={therapist} />
+  const renderDayView = () => renderGrid(allTherapists, (therapist: Therapist, index) => (
+      <React.Fragment key={therapist.id}>
+        <GridColumn date={currentDate} therapist={therapist} />
+      </React.Fragment>
   ));
   
   const renderHeader = () => {

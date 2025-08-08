@@ -1,9 +1,4 @@
-
-<<<<<<< Current (Your changes)
-import React from 'react';
-=======
 import React, { Suspense } from 'react';
->>>>>>> Incoming (Background Agent changes)
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';

@@ -1,5 +1,5 @@
 import { UUID } from 'crypto';
-import { CreateGroupSessionDTO, GroupSessionResponseDTO } from '../dto/group-session-dto';
+import { CreateGroupSessionDTO, GroupSessionResponseDTO, mapGroupSessionToResponseDTO } from '../dto/group-session-dto';
 import { GroupSession, GroupSessionEntity } from '../../domain/entities/group-session';
 import { GroupSessionRepository } from '../../domain/repositories/group-session-repository';
 import { GroupMatchingService } from '../../domain/services/group-matching-service';
@@ -42,7 +42,7 @@ export class CreateGroupSessionUseCase {
         console.error('Error finding compatible patients:', error);
       });
 
-    return GroupSessionResponseDTO.fromEntity(createdGroup);
+    return mapGroupSessionToResponseDTO(createdGroup);
   }
 
   private validateInput(dto: CreateGroupSessionDTO): void {

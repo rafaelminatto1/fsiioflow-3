@@ -2,6 +2,16 @@ import { UUID } from 'crypto';
 import { PatientRepository } from '../repositories/patient-repository';
 import { Patient } from '../entities/patient';
 
+function getAgeFromDate(date: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - date.getFullYear();
+  const m = today.getMonth() - date.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 export interface MatchingScore {
   patientId: UUID;
   compatibilityScore: number;
@@ -157,8 +167,8 @@ export class GroupMatchingService {
     let totalScore = 0.0;
 
     // Similaridade de idade
-    const age1 = patient1.calculateAge();
-    const age2 = patient2.calculateAge();
+    const age1 = getAgeFromDate(patient1.birthDate);
+    const age2 = getAgeFromDate(patient2.birthDate);
     const ageDiff = Math.abs(age1 - age2);
     const ageScore = Math.max(0, 1 - (ageDiff / 30)); // Normalizar por 30 anos
     totalScore += ageScore * this.compatibilityWeights.ageSimilarity;

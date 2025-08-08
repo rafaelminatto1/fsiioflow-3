@@ -1,10 +1,5 @@
 
-<<<<<<< Current (Your changes)
-import React, { useMemo } from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-=======
 import React, { useMemo, useEffect, useState } from 'react';
->>>>>>> Incoming (Background Agent changes)
 import { Patient } from '../../types';
 import StatCard from '../dashboard/StatCard';
 import { Users, UserPlus, UserCheck, UserX } from 'lucide-react';

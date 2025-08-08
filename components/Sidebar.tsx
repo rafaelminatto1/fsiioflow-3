@@ -6,7 +6,9 @@ import { LayoutGrid, Users, Calendar, Stethoscope, ChevronLeft, ChevronRight, Ba
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 
-const NavLinkComponent = ({ to, icon: Icon, label, isCollapsed, badgeCount }: { to: string, icon: React.ElementType, label: string, isCollapsed: boolean, badgeCount?: number }) => (
+type NavItemProps = { to: string; icon: React.ElementType; label: string; isCollapsed: boolean; badgeCount?: number };
+
+const NavLinkComponent: React.FC<NavItemProps> = ({ to, icon: Icon, label, isCollapsed, badgeCount }) => (
     <NavLink
       to={to}
       className={({ isActive }) =>
