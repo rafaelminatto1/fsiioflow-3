@@ -1,6 +1,5 @@
 
-import React, { useMemo } from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Appointment, Therapist, AppointmentStatus } from '../../types';
 import StatCard from '../dashboard/StatCard';
 import { DollarSign, BarChart2, CheckCircle, Clock } from 'lucide-react';
@@ -11,6 +10,13 @@ interface FinancialReportProps {
 }
 
 const FinancialReport: React.FC<FinancialReportProps> = ({ appointments, therapists }) => {
+    const [Recharts, setRecharts] = useState<any>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        import('recharts').then(mod => { if (mounted) setRecharts(mod); });
+        return () => { mounted = false; };
+    }, []);
 
     const financialStats = useMemo(() => {
         const completedAppointments = appointments.filter(a => a.status === 'Realizado');
@@ -70,6 +76,22 @@ const FinancialReport: React.FC<FinancialReportProps> = ({ appointments, therapi
         { title: 'Consultas Realizadas', value: financialStats.completedCount.toString(), icon: <CheckCircle /> },
         { title: 'Contas a Receber', value: formatCurrency(financialStats.accountsReceivable), icon: <Clock /> },
     ];
+
+    if (!Recharts) {
+        return (
+            <div className="space-y-6 animate-fade-in-fast">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {statCards.map(stat => <StatCard key={stat.title} {...stat} />)}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    <div className="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm h-72 flex items-center justify-center text-slate-400 text-sm">Carregando gráficos...</div>
+                    <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm h-72 flex items-center justify-center text-slate-400 text-sm">Carregando gráficos...</div>
+                </div>
+            </div>
+        );
+    }
+
+    const { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } = Recharts;
 
     return (
         <div className="space-y-6 animate-fade-in-fast">

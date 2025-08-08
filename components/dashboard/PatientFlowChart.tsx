@@ -1,7 +1,6 @@
 
 // components/dashboard/PatientFlowChart.tsx
-import React, { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Patient } from '../../types';
 import { TrendingUp } from 'lucide-react';
 
@@ -10,6 +9,16 @@ interface PatientFlowChartProps {
 }
 
 const PatientFlowChart: React.FC<PatientFlowChartProps> = ({ patients }) => {
+    const [Recharts, setRecharts] = useState<any>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        import('recharts').then(mod => {
+            if (mounted) setRecharts(mod);
+        });
+        return () => { mounted = false; };
+    }, []);
+
     const patientFlowData = useMemo(() => {
         const monthMap = new Map<string, { name: string; 'Novos Pacientes': number; 'Pacientes de Alta': number }>();
         const sixMonthsAgo = new Date();
@@ -44,6 +53,16 @@ const PatientFlowChart: React.FC<PatientFlowChartProps> = ({ patients }) => {
 
         return Array.from(monthMap.values());
     }, [patients]);
+
+    if (!Recharts) {
+        return (
+            <div className="bg-white p-6 rounded-2xl shadow-sm h-80 flex items-center justify-center text-slate-400 text-sm">
+                Carregando gráfico...
+            </div>
+        );
+    }
+
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = Recharts;
 
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 h-80">

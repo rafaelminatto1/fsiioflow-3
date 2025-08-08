@@ -1,6 +1,5 @@
 
-import React, { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Appointment, Therapist, AppointmentStatus } from '../../types';
 
 interface TeamProductivityChartProps {
@@ -19,6 +18,15 @@ const getColorHex = (colorName: string) => {
 }
 
 const TeamProductivityChart: React.FC<TeamProductivityChartProps> = ({ appointments, therapists }) => {
+    const [Recharts, setRecharts] = useState<any>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        import('recharts').then(mod => {
+            if (mounted) setRecharts(mod);
+        });
+        return () => { mounted = false; };
+    }, []);
 
     const productivityData = useMemo(() => {
         const today = new Date();
@@ -44,8 +52,13 @@ const TeamProductivityChart: React.FC<TeamProductivityChartProps> = ({ appointme
         return Array.from(dataMap.values());
 
     }, [appointments, therapists]);
-    
 
+    if (!Recharts) {
+        return <div className="h-64 mt-4 flex items-center justify-center text-slate-400 text-sm">Carregando gráfico...</div>;
+    }
+
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } = Recharts;
+    
     return (
         <div className="h-64 mt-4">
              <ResponsiveContainer width="100%" height="100%">

@@ -1,6 +1,5 @@
 // components/patient-portal/PatientMetricChart.tsx
-import React, { useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useMemo, useEffect, useState } from 'react';
 import { SoapNote, TrackedMetric } from '../../types';
 import InfoCard from '../../components/ui/InfoCard';
 import { LineChart as LineChartIcon } from 'lucide-react';
@@ -11,6 +10,16 @@ interface PatientMetricChartProps {
 }
 
 const PatientMetricChart: React.FC<PatientMetricChartProps> = ({ metric, notes }) => {
+    const [Recharts, setRecharts] = useState<any>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        import('recharts').then(mod => {
+            if (mounted) setRecharts(mod);
+        });
+        return () => { mounted = false; };
+    }, []);
+
     const chartData = useMemo(() => {
         return notes
             .filter(note => note.metricResults?.some(r => r.metricId === metric.id))
@@ -24,6 +33,12 @@ const PatientMetricChart: React.FC<PatientMetricChartProps> = ({ metric, notes }
     if (chartData.length < 2) {
         return null; // Don't render if not enough data
     }
+
+    if (!Recharts) {
+        return <div className="h-64 flex items-center justify-center text-slate-400 text-sm">Carregando gráfico...</div>;
+    }
+
+    const { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } = Recharts;
 
     return (
         <InfoCard title={`Sua Evolução: ${metric.name}`} icon={<LineChartIcon />}>

@@ -7,13 +7,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import StatCard from '../../components/dashboard/StatCard';
 import { DollarSign, BarChart2, Zap, Shield } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Skeleton from '../../components/ui/Skeleton';
 
 const FinancialsPage: React.FC = () => {
     const [summary, setSummary] = useState<FinancialSummary | null>(null);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [Recharts, setRecharts] = useState<any>(null);
     const { user } = useAuth();
     const { showToast } = useToast();
 
@@ -33,6 +33,12 @@ const FinancialsPage: React.FC = () => {
         };
         fetchFinancials();
     }, [user, showToast]);
+
+    useEffect(() => {
+        let mounted = true;
+        import('recharts').then(mod => { if (mounted) setRecharts(mod); });
+        return () => { mounted = false; };
+    }, []);
     
     const monthlyRevenueChartData = useMemo(() => {
         const monthMap = new Map<string, number>();
@@ -60,6 +66,10 @@ const FinancialsPage: React.FC = () => {
         { title: 'Receita Líquida (Mês)', value: formatCurrency(summary.netRevenue), icon: <BarChart2 /> },
     ];
 
+    const LoadingChart = <div className="h-72 flex items-center justify-center text-slate-400 text-sm">Carregando gráfico...</div>;
+
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } = Recharts || {} as any;
+
     return (
         <>
             <PageHeader
@@ -75,15 +85,19 @@ const FinancialsPage: React.FC = () => {
                     <div className="bg-white p-6 rounded-2xl shadow-sm">
                         <h3 className="text-lg font-semibold text-slate-800 mb-4">Receita Líquida Mensal</h3>
                         <div className="h-72">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={monthlyRevenueChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="name" fontSize={12} />
-                                    <YAxis fontSize={12} tickFormatter={(val: number) => `R$${val/1000}k`} />
-                                    <Tooltip formatter={(val: number) => formatCurrency(val)} />
-                                    <Bar dataKey="Receita Líquida" fill="#14b8a6" />
-                                </BarChart>
-                            </ResponsiveContainer>
+                            {!Recharts ? (
+                                LoadingChart
+                            ) : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={monthlyRevenueChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                        <XAxis dataKey="name" fontSize={12} />
+                                        <YAxis fontSize={12} tickFormatter={(val: number) => `R$${val/1000}k`} />
+                                        <Tooltip formatter={(val: number) => formatCurrency(val)} />
+                                        <Bar dataKey="Receita Líquida" fill="#14b8a6" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
                     </div>
                      <div className="bg-white p-6 rounded-2xl shadow-sm">
