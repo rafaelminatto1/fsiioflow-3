@@ -1,10 +1,6 @@
 
 
-<<<<<<< Current (Your changes)
-import React from 'react';
-=======
 import React, { Suspense, lazy } from 'react';
->>>>>>> Incoming (Background Agent changes)
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -44,6 +40,7 @@ const MedicalReportPage = lazy(() => import('./pages/MedicalReportPage'));
 const MentoriaPage = lazy(() => import('./pages/MentoriaPage'));
 const WhatsAppPage = lazy(() => import('./pages/WhatsAppPage'));
 const TeleconsultaPage = lazy(() => import('./pages/TeleconsultaPage'));
+const BodyMapPage = lazy(() => import('./pages/BodyMapPage'));
 
 // Patient Portal Imports
 import PatientPortalLayout from './layouts/PatientPortalLayout';
@@ -162,6 +159,7 @@ const AppRoutes: React.FC = () => {
                     <Route path="/agenda-settings" element={<AgendaSettingsPage />} />
                     <Route path="/atendimento/:appointmentId" element={<AtendimentoPage />} />
                     <Route path="/teleconsulta/:appointmentId" element={<TeleconsultaPage />} />
+                    <Route path="/body-map" element={<BodyMapPage />} />
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                   </Suspense>

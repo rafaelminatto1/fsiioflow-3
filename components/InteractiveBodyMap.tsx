@@ -4,6 +4,7 @@ import React from 'react';
 interface InteractiveBodyMapProps {
     selectedParts: string[];
     onSelectPart: (part: string) => void;
+    highlights?: string[];
 }
 
 const BodyPart: React.FC<{ id: string; d: string; selected: boolean; onClick: (id: string) => void; }> = ({ id, d, selected, onClick }) => (
@@ -19,7 +20,7 @@ const BodyPart: React.FC<{ id: string; d: string; selected: boolean; onClick: (i
     />
 );
 
-const InteractiveBodyMap: React.FC<InteractiveBodyMapProps> = ({ selectedParts, onSelectPart }) => {
+const InteractiveBodyMap: React.FC<InteractiveBodyMapProps> = ({ selectedParts, onSelectPart, highlights = [] }) => {
     
     // Simplified SVG path data for body parts
     const parts = {
@@ -50,10 +51,19 @@ const InteractiveBodyMap: React.FC<InteractiveBodyMapProps> = ({ selectedParts, 
 
     return (
         <div className="w-full flex justify-center items-start gap-4">
-             <svg viewBox="0 0 110 150" className="w-1/2 max-w-[150px]">
-                {parts.front.map(p => (
-                    <BodyPart key={p.id} {...p} selected={selectedParts.includes(p.id)} onClick={onSelectPart} />
-                ))}
+            <svg viewBox="0 0 110 150" className="w-1/2 max-w-[150px]">
+                {parts.front.map(p => {
+                    const isSelected = selectedParts.includes(p.id);
+                    const isHighlighted = highlights.includes(p.id);
+                    return (
+                        <g key={p.id}>
+                            <BodyPart {...p} selected={isSelected} onClick={onSelectPart} />
+                            {!isSelected && isHighlighted && (
+                                <path d={p.d} className="fill-emerald-200/40 stroke-emerald-500 animate-pulse" strokeWidth="0.8" />
+                            )}
+                        </g>
+                    );
+                })}
             </svg>
              <svg viewBox="100 0 110 150" className="w-1/2 max-w-[150px]">
                 {/* Re-use front parts for the back view outline */}
@@ -61,9 +71,18 @@ const InteractiveBodyMap: React.FC<InteractiveBodyMapProps> = ({ selectedParts, 
                      <path key={p.id + "_back_outline"} d={p.d.replace(/M (\d+),/g, (match, p1) => `M ${210 - parseInt(p1)},` ).replace(/A (\d+),(\d+) 0 1 1 (\d+),/g, (match, r1, r2, p1) => `A ${r1},${r2} 0 1 0 ${210-parseInt(p1)},`)} className="fill-slate-200/50" stroke="#cbd5e1" strokeWidth="0.5" />
                 ))}
                 {/* Back-specific parts */}
-                {parts.back.map(p => (
-                    <BodyPart key={p.id} {...p} selected={selectedParts.includes(p.id)} onClick={onSelectPart} />
-                ))}
+                {parts.back.map(p => {
+                    const isSelected = selectedParts.includes(p.id);
+                    const isHighlighted = highlights.includes(p.id);
+                    return (
+                        <g key={p.id}>
+                            <BodyPart {...p} selected={isSelected} onClick={onSelectPart} />
+                            {!isSelected && isHighlighted && (
+                                <path d={p.d} className="fill-emerald-200/40 stroke-emerald-500 animate-pulse" strokeWidth="0.8" />
+                            )}
+                        </g>
+                    );
+                })}
             </svg>
         </div>
     );
