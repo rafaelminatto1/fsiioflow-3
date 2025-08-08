@@ -1,6 +1,10 @@
 
+<<<<<<< Current (Your changes)
 import React, { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+=======
+import React, { useMemo, useEffect, useState } from 'react';
+>>>>>>> Incoming (Background Agent changes)
 import { Appointment, AppointmentStatus } from '../../types';
 import { Activity } from 'lucide-react';
 
@@ -10,6 +14,15 @@ interface RevenueChartProps {
 }
 
 const RevenueChart: React.FC<RevenueChartProps> = ({ appointments }) => {
+    const [Recharts, setRecharts] = useState<any>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        import('recharts').then(mod => {
+            if (mounted) setRecharts(mod);
+        });
+        return () => { mounted = false; };
+    }, []);
     
     const revenueData = useMemo(() => {
         const dataMap = new Map<string, number>();
@@ -39,6 +52,16 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ appointments }) => {
             .reverse();
 
     }, [appointments]);
+
+    if (!Recharts) {
+        return (
+            <div className="bg-white p-6 rounded-2xl shadow-sm h-80 flex items-center justify-center text-slate-400 text-sm">
+                Carregando gráfico...
+            </div>
+        );
+    }
+
+    const { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = Recharts;
 
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 h-80">

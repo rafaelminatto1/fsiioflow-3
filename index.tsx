@@ -1,5 +1,9 @@
 
+<<<<<<< Current (Your changes)
 import React from 'react';
+=======
+import React, { Suspense } from 'react';
+>>>>>>> Incoming (Background Agent changes)
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
@@ -20,7 +24,9 @@ root.render(
       <ToastProvider>
         <AuthProvider>
           <DataProvider>
-            <App />
+            <Suspense fallback={<div className="p-6 text-slate-500">Carregando aplicação...</div>}>
+              <App />
+            </Suspense>
           </DataProvider>
         </AuthProvider>
       </ToastProvider>

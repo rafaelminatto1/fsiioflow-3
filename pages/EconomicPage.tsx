@@ -1,6 +1,10 @@
 
+<<<<<<< Current (Your changes)
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
+=======
+import React, { useEffect, useState } from 'react';
+>>>>>>> Incoming (Background Agent changes)
 import PageHeader from '../components/PageHeader';
 import { useEconomicAiAnalytics, ProviderStatus } from '../hooks/useEconomicAiAnalytics';
 import { EconomicAiLog, ResponseSource, PremiumProvider } from '../services/ai-economica/types/ai-economica.types';
@@ -84,6 +88,13 @@ const QueryLogRow: React.FC<{ log: EconomicAiLog }> = ({ log }) => {
 
 const EconomicPage: React.FC = () => {
     const { stats, logs, providerStatus, isLoading } = useEconomicAiAnalytics();
+    const [Recharts, setRecharts] = useState<any>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        import('recharts').then(mod => { if (mounted) setRecharts(mod); });
+        return () => { mounted = false; };
+    }, []);
 
     if (isLoading || !stats) {
         return <PageLoader />;
@@ -104,6 +115,8 @@ const EconomicPage: React.FC = () => {
         { title: 'Base de Conhecimento', value: stats.internalHits.toString(), icon: <Library /> },
     ];
     
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } = Recharts || {} as any;
+
     return (
         <>
             <PageHeader
@@ -127,19 +140,23 @@ const EconomicPage: React.FC = () => {
                     <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm">
                          <h3 className="text-lg font-semibold text-slate-800 mb-4">Uso por Fonte</h3>
                          <div className="h-64">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={usageData} layout="vertical" margin={{ left: 20, right: 20, top: 5, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                    <XAxis type="number" allowDecimals={false} />
-                                    <YAxis type="category" dataKey="name" width={140} interval={0} fontSize={12} />
-                                    <Tooltip cursor={{fill: '#f1f5f9'}} />
-                                    <Bar dataKey="Consultas" barSize={20}>
-                                        {usageData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
+                            {!Recharts ? (
+                                <div className="h-64 flex items-center justify-center text-slate-400 text-sm">Carregando gráfico...</div>
+                            ) : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={usageData} layout="vertical" margin={{ left: 20, right: 20, top: 5, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                        <XAxis type="number" allowDecimals={false} />
+                                        <YAxis type="category" dataKey="name" width={140} interval={0} fontSize={12} />
+                                        <Tooltip cursor={{fill: '#f1f5f9'}} />
+                                        <Bar dataKey="Consultas" barSize={20}>
+                                            {usageData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
                     </div>
                 </div>

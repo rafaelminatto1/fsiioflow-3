@@ -1,6 +1,10 @@
 
+<<<<<<< Current (Your changes)
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+=======
+import React, { useEffect, useState, useMemo } from 'react';
+>>>>>>> Incoming (Background Agent changes)
 import { PainLog } from '../../types';
 
 interface PainTrendChartProps {
@@ -8,13 +12,29 @@ interface PainTrendChartProps {
 }
 
 const PainTrendChart: React.FC<PainTrendChartProps> = ({ painLogs }) => {
-    const chartData = painLogs
+    const [Recharts, setRecharts] = useState<any>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        import('recharts').then(mod => {
+            if (mounted) setRecharts(mod);
+        });
+        return () => { mounted = false; };
+    }, []);
+
+    const chartData = useMemo(() => painLogs
         .map(log => ({
             name: log.date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
             'Nível de Dor': log.painLevel,
             notes: log.notes
         }))
-        .reverse(); // Show oldest to newest
+        .reverse(), [painLogs]);
+
+    if (!Recharts) {
+        return <div className="h-64 flex items-center justify-center text-slate-400 text-sm">Carregando gráfico...</div>;
+    }
+
+    const { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = Recharts;
 
     return (
         <div className="h-64">

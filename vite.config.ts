@@ -12,6 +12,25 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        target: 'es2022',
+        sourcemap: false,
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              recharts: ['recharts'],
+              genai: ['@google/genai'],
+            }
+          }
+        }
+      },
+      esbuild: {
+        drop: ['console', 'debugger']
+      },
+      optimizeDeps: {
+        include: ['react', 'react-dom', 'react-router-dom'],
+        exclude: ['@google/genai', 'html2pdf.js']
       }
     };
 });

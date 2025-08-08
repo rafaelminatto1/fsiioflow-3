@@ -1,6 +1,5 @@
 // components/MetricEvolutionChart.tsx
-import React, { useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import React, { useMemo, useEffect, useState } from 'react';
 import { SoapNote, TrackedMetric } from '../types';
 import InfoCard from './ui/InfoCard';
 import { LineChart as LineChartIcon } from 'lucide-react';
@@ -11,6 +10,16 @@ interface MetricEvolutionChartProps {
 }
 
 const MetricEvolutionChart: React.FC<MetricEvolutionChartProps> = ({ metric, notes }) => {
+    const [Recharts, setRecharts] = useState<any>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        import('recharts').then(mod => {
+            if (mounted) setRecharts(mod);
+        });
+        return () => { mounted = false; };
+    }, []);
+
     const chartData = useMemo(() => {
         return notes
             .filter(note => note.metricResults?.some(r => r.metricId === metric.id))
@@ -30,6 +39,16 @@ const MetricEvolutionChart: React.FC<MetricEvolutionChartProps> = ({ metric, not
             </InfoCard>
         );
     }
+
+    if (!Recharts) {
+        return (
+            <InfoCard title={`Evolução: ${metric.name}`} icon={<LineChartIcon />}>
+                <div className="h-64 flex items-center justify-center text-slate-400 text-sm">Carregando gráfico...</div>
+            </InfoCard>
+        );
+    }
+
+    const { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } = Recharts;
 
     return (
         <InfoCard title={`Evolução: ${metric.name}`} icon={<LineChartIcon />}>

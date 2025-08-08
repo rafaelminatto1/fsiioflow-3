@@ -1,24 +1,238 @@
-# Logs
-logs
-*.log
+# Dependencies
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.nuxt/
+.output/
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+.nyc_output/
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.example
+
+# Vite
 *.local
+.vite/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+.db/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.turbo/
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Testing
+.jest/
+jest-coverage/
+coverage.json
+
+# TypeScript
+*.tsbuildinfo
+
+# Temporary folders
+tmp/
+temp/
+.tmp/
+
+# Runtime configuration
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# Yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Drizzle
+.drizzle/
+drizzle/
+
+# AI and ML models
+*.model
+*.h5
+*.pkl
+*.joblib
+models/
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Application specific
+uploads/
+public/uploads/
+storage/
+.storage/
+
+# Redis dump file
+dump.rdb
+
+# Certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Local development
+.local/
+local.json
+development.json
+
+# Performance monitoring
+.clinic/
+clinic.*
+
+# Storybook build outputs
+storybook-static/
+
+# Temporary files
+.DS_STORE
+*~
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Documentation build
+docs/build/
+.docusaurus/
+
+# Sentry
+.sentryclirc
+
+# Vercel
+.vercel
+
+# Netlify
+.netlify/
+
+# AWS
+.aws/
+
+# Kubernetes
+*.kubeconfig
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Pulumi
+Pulumi.*.yaml
+
+# Application logs
+app.log
+error.log
+access.log
+
+# Lock files (keep yarn.lock or package-lock.json based on your preference)
+# package-lock.json
+# yarn.lock
+
+# IDE specific
+.fleet/
+.lapce/

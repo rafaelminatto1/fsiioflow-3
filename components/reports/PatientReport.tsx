@@ -1,6 +1,10 @@
 
+<<<<<<< Current (Your changes)
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+=======
+import React, { useMemo, useEffect, useState } from 'react';
+>>>>>>> Incoming (Background Agent changes)
 import { Patient } from '../../types';
 import StatCard from '../dashboard/StatCard';
 import { Users, UserPlus, UserCheck, UserX } from 'lucide-react';
@@ -10,12 +14,19 @@ interface PatientReportProps {
 }
 
 const COLORS = {
-    Active: '#10b981', // green-500
-    Inactive: '#f59e0b', // amber-500
-    Discharged: '#64748b', // slate-500
+    Active: '#10b981',
+    Inactive: '#f59e0b',
+    Discharged: '#64748b',
 };
 
 const PatientReport: React.FC<PatientReportProps> = ({ patients }) => {
+    const [Recharts, setRecharts] = useState<any>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        import('recharts').then(mod => { if (mounted) setRecharts(mod); });
+        return () => { mounted = false; };
+    }, []);
     
     const patientStats = useMemo(() => {
         const statusCounts = { Active: 0, Inactive: 0, Discharged: 0 };
@@ -71,6 +82,26 @@ const PatientReport: React.FC<PatientReportProps> = ({ patients }) => {
         { title: 'Novos no Mês', value: patientStats.newThisMonth.toString(), icon: <UserPlus /> },
         { title: 'Inativos/Alta', value: (patientStats.Inactive + patientStats.Discharged).toString(), icon: <UserX /> },
     ];
+
+    const LoadingChart = (
+        <div className="h-72 flex items-center justify-center text-slate-400 text-sm">Carregando gráficos...</div>
+    );
+
+    if (!Recharts) {
+        return (
+            <div className="space-y-6 animate-fade-in-fast">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {statCards.map(stat => <StatCard key={stat.title} {...stat} />)}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    <div className="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm">{LoadingChart}</div>
+                    <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm">{LoadingChart}</div>
+                </div>
+            </div>
+        );
+    }
+
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell } = Recharts;
 
     return (
         <div className="space-y-6 animate-fade-in-fast">
