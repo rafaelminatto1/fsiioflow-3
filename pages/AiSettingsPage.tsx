@@ -53,7 +53,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ providerKey, config, onTogg
 
 
 const AiSettingsPage: React.FC = () => {
-    const [providerConfigs, setProviderConfigs] = useState<Record<string, ProviderSettings>>({});
+    const [providerConfigs, setProviderConfigs] = useState<Record<string, ProviderSettings>>({} as Record<string, ProviderSettings>);
     const [defaultProvider, setDefaultProvider] = useState<PremiumProvider>(PremiumProvider.GEMINI_PRO);
     const { showToast } = useToast();
 
@@ -104,7 +104,7 @@ const AiSettingsPage: React.FC = () => {
                         onChange={(e) => setDefaultProvider(e.target.value as PremiumProvider)}
                         className="w-full max-w-sm p-2 border border-slate-300 rounded-lg bg-white"
                      >
-                         {Object.entries(providerConfigs).map(([key, config]) => (
+                         {Object.entries(providerConfigs as Record<string, ProviderSettings>).map(([key, config]) => (
                              config.enabled && <option key={key} value={key}>{config.name}</option>
                          ))}
                      </select>
@@ -113,7 +113,7 @@ const AiSettingsPage: React.FC = () => {
                 <div className="bg-white p-6 rounded-2xl shadow-sm">
                     <h3 className="text-lg font-semibold text-slate-800 mb-4">Status dos Provedores</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {Object.entries(providerConfigs).map(([key, config]) => (
+                        {Object.entries(providerConfigs as Record<string, ProviderSettings>).map(([key, config]) => (
                             <ProviderCard key={key} providerKey={key} config={config} onToggle={handleToggleProvider} />
                         ))}
                     </div>

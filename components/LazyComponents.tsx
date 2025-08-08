@@ -114,9 +114,10 @@ export class LazyComponentErrorBoundary extends React.Component<
   { children: React.ReactNode; fallback?: React.ReactNode },
   { hasError: boolean; error?: Error }
 > {
+  state: { hasError: boolean; error?: Error } = { hasError: false };
+
   constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
     super(props);
-    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error) {
@@ -129,14 +130,14 @@ export class LazyComponentErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
-      return this.props.fallback || (
+      return (this as any).props.fallback || (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
           <h3 className="text-red-800 font-medium">Erro ao carregar componente</h3>
           <p className="text-red-600 text-sm mt-1">
             {this.state.error?.message || 'Componente não pôde ser carregado'}
           </p>
           <button 
-            onClick={() => this.setState({ hasError: false })}
+            onClick={() => (this as any).setState({ hasError: false })}
             className="mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
           >
             Tentar novamente
@@ -145,7 +146,7 @@ export class LazyComponentErrorBoundary extends React.Component<
       );
     }
 
-    return this.props.children;
+    return (this as any).props.children;
   }
 }
 

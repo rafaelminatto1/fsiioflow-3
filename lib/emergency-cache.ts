@@ -1,21 +1,12 @@
-// 🚨 EMERGENCY CACHING - AGGRESSIVE PERFORMANCE OPTIMIZATION
+// 🚨 EMERGENCY CACHING - AGRESSIVE PERFORMANCE OPTIMIZATION
 import Redis from 'ioredis';
 
-// Emergency Redis client with aggressive settings
+// Emergency Redis client with conservative, compatible settings
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-  // Aggressive connection pooling
   maxRetriesPerRequest: 3,
-  retryDelayOnFailover: 100,
   enableOfflineQueue: false,
   connectTimeout: 5000,
-  commandTimeout: 2000,
-  
-  // Connection pool optimization
-  family: 4,
-  keepAlive: true,
-  
-  // Compression for large payloads
-  compression: 'gzip',
+  lazyConnect: true,
 });
 
 // Emergency cache configuration
@@ -37,7 +28,7 @@ const EMERGENCY_CACHE_CONFIG = {
   }
 };
 
-// 🚨 EMERGENCY: Aggressive query caching with compression
+// 🚨 EMERGENCY: Aggressive query caching with optional compression
 export async function emergencyQueryCache<T>(
   key: string,
   queryFn: () => Promise<T>,

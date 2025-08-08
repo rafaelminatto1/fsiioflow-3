@@ -22,5 +22,18 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "app/**",
+    "middleware.ts",
+    "middleware/**",
+    "config/**",
+    "next.config.js",
+    "sw.js",
+    "public/**",
+    "src/presentation/**",
+    "src/tests/**",
+    "tests/**",
+    "vite.config.emergency.ts"
+  ]
 }

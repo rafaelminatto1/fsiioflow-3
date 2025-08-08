@@ -68,8 +68,8 @@ const RegionDetailsPanel: React.FC<RegionDetailsPanelProps> = ({ region, onChang
     onChange({ ...region, ...partial });
   };
 
-  const selectedChars = useMemo(() => new Set(region?.painCharacteristic ?? []), [region?.painCharacteristic]);
-  const selectedSymptoms = useMemo(() => new Set(region?.symptomType ?? []), [region?.symptomType]);
+  const selectedChars = useMemo(() => new Set<string>(region?.painCharacteristic ?? []), [region?.painCharacteristic]);
+  const selectedSymptoms = useMemo(() => new Set<SymptomType>(region?.symptomType ?? []), [region?.symptomType]);
 
   return (
     <div className="space-y-4">
@@ -120,7 +120,7 @@ const RegionDetailsPanel: React.FC<RegionDetailsPanelProps> = ({ region, onChang
                 disabled={disabled}
                 onClick={() => {
                   if (!region) return;
-                  const set = new Set(region.painCharacteristic);
+                  const set = new Set<string>(region.painCharacteristic);
                   if (set.has(c)) set.delete(c); else set.add(c);
                   update({ painCharacteristic: Array.from(set) });
                 }}
@@ -142,7 +142,7 @@ const RegionDetailsPanel: React.FC<RegionDetailsPanelProps> = ({ region, onChang
                 disabled={disabled}
                 onClick={() => {
                   if (!region) return;
-                  const set = new Set(region.symptomType);
+                  const set = new Set<SymptomType>(region.symptomType);
                   if (set.has(s)) set.delete(s); else set.add(s);
                   update({ symptomType: Array.from(set) });
                 }}

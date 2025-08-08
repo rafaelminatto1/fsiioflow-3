@@ -1,10 +1,5 @@
 
-<<<<<<< Current (Your changes)
-import React, { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-=======
 import React, { useMemo, useEffect, useState } from 'react';
->>>>>>> Incoming (Background Agent changes)
 import { Appointment, Therapist, AppointmentStatus } from '../../types';
 
 interface TeamProductivityChartProps {

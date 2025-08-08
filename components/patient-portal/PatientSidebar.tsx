@@ -6,7 +6,9 @@ import { LayoutGrid, NotebookText, LogOut, Stethoscope, TrendingUp, ShoppingCart
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
 
-const NavLinkComponent = ({ to, icon: Icon, label, badgeCount }: { to: string, icon: React.ElementType, label: string, badgeCount?: number }) => (
+type NavItemProps = { to: string; icon: React.ElementType; label: string; badgeCount?: number };
+
+const NavLinkComponent: React.FC<NavItemProps> = ({ to, icon: Icon, label, badgeCount }) => (
     <NavLink
       to={to}
       className={({ isActive }) =>
@@ -63,7 +65,7 @@ const PatientSidebar: React.FC = () => {
             to={item.to}
             icon={item.icon}
             label={item.label}
-            badgeCount={item.badgeCount}
+            badgeCount={(item as any).badgeCount}
           />
         ))}
       </nav>

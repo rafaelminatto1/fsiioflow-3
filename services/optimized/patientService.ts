@@ -3,7 +3,7 @@ import { eq, desc, asc, count, ilike, and, or, sql } from 'drizzle-orm';
 import { db, logQueryMetrics } from '../../lib/database';
 import { patients } from '../../lib/schema';
 import { cacheQuery, CACHE_TTL, invalidatePatientCache } from '../../lib/redis';
-import type { Patient, PatientSummary } from '../types';
+import type { Patient, PatientSummary } from '../../types';
 
 // Performance monitoring wrapper
 async function withPerformanceLogging<T>(
@@ -158,13 +158,13 @@ export const addPatient = async (
   return await withPerformanceLogging('addPatient', async () => {
     const result = await db.insert(patients)
       .values({
-        ...patientData,
+        ...(patientData as any),
         registrationDate: new Date().toISOString().split('T')[0],
         lastVisit: new Date().toISOString().split('T')[0],
-      })
+      } as any)
       .returning();
     
-    const newPatient = result[0];
+    const newPatient = result[0] as any as Patient;
     
     // Invalidate relevant caches
     await invalidatePatientCache();
@@ -181,9 +181,9 @@ export const updatePatient = async (
   return await withPerformanceLogging('updatePatient', async () => {
     const result = await db.update(patients)
       .set({
-        ...updates,
+        ...(updates as any),
         updatedAt: sql`NOW()`,
-      })
+      } as any)
       .where(eq(patients.id, id))
       .returning();
     
@@ -191,7 +191,7 @@ export const updatePatient = async (
       throw new Error('Patient not found');
     }
     
-    const updatedPatient = result[0];
+    const updatedPatient = result[0] as any as Patient;
     
     // Invalidate specific patient cache and list caches
     await invalidatePatientCache(id);

@@ -65,23 +65,23 @@ export interface GroupSessionResponseDTO {
   };
   createdAt: Date;
   updatedAt: Date;
+}
 
-  static fromEntity(entity: GroupSession): GroupSessionResponseDTO {
-    return {
-      id: entity.id,
-      name: entity.name,
-      description: entity.description,
-      fisioterapeutaId: entity.fisioterapeutaId,
-      maxCapacity: entity.maxCapacity,
-      currentMembers: entity.currentMembers,
-      memberCount: entity.currentMembers.length,
-      availableSlots: entity.maxCapacity - entity.currentMembers.length,
-      exercises: entity.exercises,
-      schedule: entity.schedule,
-      status: entity.status,
-      requirements: entity.requirements,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt
-    };
-  }
+export function mapGroupSessionToResponseDTO(entity: GroupSession): GroupSessionResponseDTO {
+  return {
+    id: entity.id,
+    name: entity.name,
+    description: entity.description,
+    fisioterapeutaId: entity.fisioterapeutaId,
+    maxCapacity: entity.maxCapacity,
+    currentMembers: entity.currentMembers,
+    memberCount: entity.currentMembers.length,
+    availableSlots: entity.maxCapacity - entity.currentMembers.length,
+    exercises: entity.exercises,
+    schedule: entity.schedule,
+    status: entity.status,
+    requirements: entity.requirements,
+    createdAt: entity.createdAt,
+    updatedAt: entity.updatedAt
+  };
 }

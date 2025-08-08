@@ -45,15 +45,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isLoading]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   const enrichedAppointments = React.useMemo((): EnrichedAppointment[] => {
-    const patientMap = new Map(patients.map(p => [p.id, p]));
-    const therapistMap = new Map(therapists.map(t => [t.id, t]));
+    const patientMap = new Map<string, Patient>(patients.map(p => [p.id, p]));
+    const therapistMap = new Map<string, Therapist>(therapists.map(t => [t.id, t]));
 
     return appointments.map(app => ({
         ...app,

@@ -118,7 +118,7 @@ export function emergencySmartDebounce<T>(
   // If too many requests, use cache instead
   if (frequency.count > maxRequests) {
     console.warn(`🚨 Emergency: Too many requests for ${key}, using cache`);
-    return emergencyQueryCache(key, requestFn, 60); // 1 minute cache
+    return emergencyQueryCache(key, requestFn, 60).then(r => r.data); // 1 minute cache
   }
   
   return emergencyDebounceRequest(key, requestFn, dynamicDelay);

@@ -2,6 +2,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { createClient } from '@supabase/supabase-js';
+import { sql } from 'drizzle-orm';
 import * as schema from './schema';
 
 // Environment variables with defaults
@@ -70,9 +71,6 @@ export function getSupabase() {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
-      },
-      db: {
-        schema: 'public',
       },
     });
   }
