@@ -21,6 +21,7 @@ export const JWT_CONFIG = {
 // NextAuth configuration
 export const nextAuthConfig: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+  providers: [], // Add providers here as needed
   
   session: {
     strategy: 'jwt',
@@ -31,7 +32,7 @@ export const nextAuthConfig: NextAuthOptions = {
   jwt: {
     secret: JWT_CONFIG.secret,
     maxAge: JWT_CONFIG.maxAge,
-    encryption: JWT_CONFIG.encryption,
+    // encryption: JWT_CONFIG.encryption, // Not supported in this version
   },
   
   cookies: {
@@ -72,7 +73,7 @@ export const nextAuthConfig: NextAuthOptions = {
     async session({ session, token }) {
       if (token?.user) {
         session.user = token.user as any;
-        session.accessToken = token.accessToken as string;
+        (session as any).accessToken = token.accessToken as string;
       }
       
       return session;
@@ -90,7 +91,7 @@ export const nextAuthConfig: NextAuthOptions = {
     
     async session({ session, token }) {
       // Track session activity
-      console.log('Session accessed:', { userId: session.user?.id });
+      console.log('Session accessed:', { userId: (session.user as any)?.id });
     },
   },
 };
@@ -130,7 +131,7 @@ export async function validateJWT(token: string): Promise<SessionUser | null> {
 // Session refresh utility
 export function shouldRefreshSession(token: JWT): boolean {
   const now = Math.floor(Date.now() / 1000);
-  const tokenAge = now - (token.iat || 0);
+  const tokenAge = now - Number(token.iat || 0);
   const refreshThreshold = SESSION_CONFIG.maxAge * 0.8; // Refresh at 80% of max age
   
   return tokenAge > refreshThreshold;

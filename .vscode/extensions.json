@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    "cursor.cursor-ai",
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-vscode.vscode-jest",
+    "github.copilot",
+    "ms-vscode.vscode-json",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    "ms-vscode.vscode-jest-runner",
+    "orta.vscode-jest",
+    "bradlc.vscode-tailwindcss",
+    "kamikillerto.vscode-colorize",
+    "ms-vscode.vscode-typescript-next"
+  ]
+}

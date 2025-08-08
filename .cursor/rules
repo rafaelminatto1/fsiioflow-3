@@ -1,0 +1,116 @@
+# FisioFlow - Cursor IDE Rules and Prompts
+
+## Project Overview
+FisioFlow is an advanced physiotherapy management platform using Clean Architecture with AI-powered features for patient adherence prediction, economic optimization, and gamification.
+
+## Code Standards
+
+### TypeScript
+- Use strict TypeScript with proper typing
+- Follow Clean Architecture patterns
+- Implement interfaces for all external dependencies
+- Use dependency injection for services
+
+### React Components
+- Use functional components with hooks
+- Implement proper error boundaries
+- Follow component composition patterns
+- Use TypeScript for all props and state
+
+### File Structure
+```
+src/
+├── domain/           # Business entities and rules
+├── application/      # Use cases and DTOs
+├── infrastructure/   # External integrations
+├── presentation/     # React components
+└── shared/          # Shared utilities
+```
+
+## AI Assistant Instructions
+
+### For Component Creation
+When creating React components:
+1. Follow existing component patterns in the codebase
+2. Use TypeScript interfaces for all props
+3. Implement proper error handling
+4. Include accessibility attributes
+5. Follow responsive design principles
+
+### For Business Logic
+When implementing business rules:
+1. Keep business logic in domain entities
+2. Use repository patterns for data access
+3. Implement proper validation
+4. Follow SOLID principles
+
+### For AI Features
+When implementing AI services:
+1. Use proper error handling for API calls
+2. Implement retry mechanisms
+3. Cache predictions when appropriate
+4. Provide fallback mechanisms
+
+## Project Specific Context
+
+### Stack
+- Frontend: React 19.1.1 + TypeScript + Tailwind CSS
+- Backend: Next.js API Routes
+- Database: Supabase (PostgreSQL)
+- AI: Gemini AI for predictions
+- Testing: Jest + React Testing Library
+
+### Key Features
+- AI adherence prediction (26+ variables)
+- Economic optimization algorithms
+- Advanced gamification system
+- Injury tracking with timeline
+- Real-time dashboard metrics
+
+### Security Requirements
+- Input validation for all user data
+- Proper authentication checks
+- Data encryption for sensitive information
+- Rate limiting on API endpoints
+- HTTPS everywhere
+
+## Common Patterns
+
+### Service Pattern
+```typescript
+interface ServiceInterface {
+  method(): Promise<Result>;
+}
+
+class ServiceImpl implements ServiceInterface {
+  constructor(private dependencies: Dependencies) {}
+  
+  async method(): Promise<Result> {
+    // Implementation
+  }
+}
+```
+
+### Repository Pattern
+```typescript
+interface Repository<T> {
+  findById(id: string): Promise<T | null>;
+  save(entity: T): Promise<void>;
+  delete(id: string): Promise<void>;
+}
+```
+
+### Use Case Pattern
+```typescript
+interface UseCase<Input, Output> {
+  execute(input: Input): Promise<Output>;
+}
+
+class UseCaseImpl implements UseCase<Input, Output> {
+  constructor(private repository: Repository) {}
+  
+  async execute(input: Input): Promise<Output> {
+    // Business logic
+  }
+}
+```

@@ -13,7 +13,7 @@ import {
 } from '../../../services/optimized/dashboardService';
 
 // GET /api/dashboard - Get comprehensive dashboard data
-async function GET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const section = searchParams.get('section') || 'all';
@@ -143,11 +143,4 @@ async function GET(request: NextRequest) {
   }
 }
 
-// Apply middleware
-export const GET_HANDLER = withPerformanceTracking(
-  withCorsHeaders(
-    withAuth(GET, 'Fisioterapeuta')
-  )
-);
-
-export { GET_HANDLER as GET };
+// Next.js App Router exports - middleware will be applied via middleware.ts

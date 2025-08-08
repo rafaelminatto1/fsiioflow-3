@@ -1,10 +1,6 @@
 
-<<<<<<< Current (Your changes)
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-=======
 import React, { useEffect, useState, useMemo } from 'react';
->>>>>>> Incoming (Background Agent changes)
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { PainLog } from '../../types';
 
 interface PainTrendChartProps {

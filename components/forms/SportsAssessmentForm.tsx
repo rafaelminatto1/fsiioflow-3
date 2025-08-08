@@ -38,7 +38,7 @@ interface SportsAssessmentFormProps {
 
 const SportsAssessmentForm: React.FC<SportsAssessmentFormProps> = ({ patientId, onBack }) => {
   const { register, control, handleSubmit, formState: { errors, isSubmitting } } = useForm<SportsAssessmentFormData>({
-    resolver: zodResolver(sportsAssessmentSchema),
+    resolver: zodResolver(sportsAssessmentSchema) as any,
     defaultValues: { patientId, functionalTests: [], injuryHistory: { painLevel: 0 } },
   });
 

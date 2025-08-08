@@ -6,12 +6,19 @@ import MainLayout from './layouts/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Role } from './types';
 
-// Lazily loaded pages
+// 🚨 EMERGENCY: Optimized lazy loading with preloading
+import {
+  LazyDashboard,
+  LazyPatientList,
+  LazyAgenda,
+  LazyPatientDetail,
+  preloadCriticalComponents
+} from './components/emergency/LazyLoadOptimizer';
+
+// 🚨 EMERGENCY: Critical pages (preloaded)
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const PatientListPage = lazy(() => import('./pages/PatientListPage'));
-const PatientDetailPage = lazy(() => import('./pages/PatientDetailPage'));
-const AgendaPage = lazy(() => import('./pages/AgendaPage'));
+
+// 🚨 EMERGENCY: Secondary pages (loaded on demand)
 const ReportsPage = lazy(() => import('./pages/ReportsPage'));
 const AuditLogPage = lazy(() => import('./pages/AuditLogPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
@@ -65,8 +72,20 @@ const FinancialsPage = lazy(() => import('./pages/partner-portal/FinancialsPage'
 
 
 const AppRoutes: React.FC = () => {
+    // 🚨 EMERGENCY: Preload critical components on route load
+    React.useEffect(() => {
+        preloadCriticalComponents();
+    }, []);
+
     return (
-        <Suspense fallback={<div className="p-6 text-slate-500">Carregando...</div>}>
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading application...</p>
+                </div>
+            </div>
+        }>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           
@@ -126,12 +145,12 @@ const AppRoutes: React.FC = () => {
                   <Suspense fallback={<div className="p-6 text-slate-500">Carregando...</div>}>
                   <Routes>
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/dashboard" element={<LazyDashboard />} />
                     <Route path="/clinical-analytics" element={<ClinicalAnalyticsPage />} />
                     <Route path="/financials" element={<FinancialDashboardPage />} />
-                    <Route path="/patients" element={<PatientListPage />} />
-                    <Route path="/patients/:id" element={<PatientDetailPage />} />
-                    <Route path="/agenda" element={<AgendaPage />} />
+                    <Route path="/patients" element={<LazyPatientList />} />
+                    <Route path="/patients/:id" element={<LazyPatientDetail />} />
+                    <Route path="/agenda" element={<LazyAgenda />} />
                     <Route path="/notifications" element={<NotificationCenterPage />} />
                     <Route path="/whatsapp" element={<WhatsAppPage />} />
                     <Route path="/groups" element={<GroupsPage />} />

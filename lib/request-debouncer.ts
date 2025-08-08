@@ -1,5 +1,5 @@
 // 🚨 EMERGENCY REQUEST DEBOUNCING - PREVENT DUPLICATE QUERIES
-import { emergencyQueryCache } from './emergency-cache';
+import { emergencyCache } from './emergency-cache';
 
 // Request debouncing configuration
 const DEBOUNCE_CONFIG = {
@@ -118,7 +118,11 @@ export function emergencySmartDebounce<T>(
   // If too many requests, use cache instead
   if (frequency.count > maxRequests) {
     console.warn(`🚨 Emergency: Too many requests for ${key}, using cache`);
-    return emergencyQueryCache(key, requestFn, 60); // 1 minute cache
+    const cached = emergencyCache.get(key);
+    if (cached) return cached;
+    const result = await requestFn();
+    emergencyCache.set(key, result, 60);
+    return result;
   }
   
   return emergencyDebounceRequest(key, requestFn, dynamicDelay);
@@ -311,10 +315,15 @@ export async function emergencyOptimizedRequest<T>(
     rateLimited = true;
     // Return cached data if available
     try {
-      const cached = await emergencyQueryCache(key, requestFn, cacheSeconds);
+      const cached = emergencyCache.get(key);
+      if (!cached) {
+        const result = await requestFn();
+        emergencyCache.set(key, result, cacheSeconds);
+        return { data: result, cacheHit: false, debounced: false, rateLimited: true };
+      }
       return { 
-        data: cached.data, 
-        cacheHit: cached.cacheHit, 
+        data: cached, 
+        cacheHit: true, 
         debounced: false, 
         rateLimited: true 
       };
@@ -342,11 +351,21 @@ export async function emergencyOptimizedRequest<T>(
   };
   
   // Apply caching
-  const result = await emergencyQueryCache(key, optimizedRequestFn, cacheSeconds);
+  const cached = emergencyCache.get(key);
+  let result;
+  let cacheHit = false;
+  
+  if (cached) {
+    result = cached;
+    cacheHit = true;
+  } else {
+    result = await optimizedRequestFn();
+    emergencyCache.set(key, result, cacheSeconds);
+  }
   
   return {
-    data: result.data,
-    cacheHit: result.cacheHit,
+    data: result,
+    cacheHit: cacheHit,
     debounced,
     rateLimited
   };

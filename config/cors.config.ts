@@ -45,7 +45,7 @@ export function getCorsHeaders(origin?: string): HeadersInit {
     : corsConfig.origin;
 
   return {
-    'Access-Control-Allow-Origin': allowedOrigin.toString(),
+    'Access-Control-Allow-Origin': allowedOrigin?.toString() || '*',
     'Access-Control-Allow-Credentials': corsConfig.credentials.toString(),
     'Access-Control-Allow-Methods': corsConfig.methods.join(', '),
     'Access-Control-Allow-Headers': corsConfig.allowedHeaders.join(', '),

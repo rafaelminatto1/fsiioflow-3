@@ -4,92 +4,92 @@ import React, { Suspense, lazy } from 'react';
 // 🚨 EMERGENCY: Lazy load heavy components
 export const LazyDashboardPage = lazy(() => 
   import('../pages/DashboardPage').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyPatientListPage = lazy(() => 
   import('../pages/PatientListPage').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyPatientDetailPage = lazy(() => 
   import('../pages/PatientDetailPage').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyAgendaPage = lazy(() => 
   import('../pages/AgendaPage').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyClinicalAnalyticsPage = lazy(() => 
   import('../pages/ClinicalAnalyticsPage').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyFinancialPage = lazy(() => 
   import('../pages/FinancialPage').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyReportsPage = lazy(() => 
   import('../pages/ReportsPage').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyExerciseLibraryPage = lazy(() => 
   import('../pages/ExerciseLibraryPage').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 // 🚨 EMERGENCY: Lazy load heavy components
 export const LazyRevenueChart = lazy(() => 
   import('../components/dashboard/RevenueChart').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyPatientFlowChart = lazy(() => 
   import('../components/dashboard/PatientFlowChart').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyTeamProductivityChart = lazy(() => 
   import('../components/dashboard/TeamProductivityChart').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyAppointmentHeatmap = lazy(() => 
   import('../components/dashboard/AppointmentHeatmap').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyClinicalAnalyticsDashboard = lazy(() => 
   import('../components/analytics/ClinicalAnalyticsDashboard').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyAiAssistant = lazy(() => 
   import('../components/AiAssistant').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 
 export const LazyInteractiveBodyMap = lazy(() => 
   import('../components/InteractiveBodyMap').then(module => ({
-    default: module.default
+    default: (module as any).default || module
   }))
 );
 

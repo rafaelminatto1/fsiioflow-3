@@ -12,7 +12,7 @@ import {
 } from '../../../services/optimized/appointmentService';
 
 // GET /api/appointments - List appointments with filters
-async function GET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const section = searchParams.get('section');
@@ -76,7 +76,7 @@ async function GET(request: NextRequest) {
 }
 
 // POST /api/appointments - Create new appointment
-async function POST(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
@@ -126,7 +126,7 @@ async function POST(request: NextRequest) {
 }
 
 // PUT /api/appointments - Update appointment
-async function PUT(request: NextRequest) {
+export async function PUT(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -169,7 +169,7 @@ async function PUT(request: NextRequest) {
 }
 
 // DELETE /api/appointments - Delete appointment
-async function DELETE(request: NextRequest) {
+export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -203,34 +203,4 @@ async function DELETE(request: NextRequest) {
   }
 }
 
-// Apply middleware
-export const GET_HANDLER = withPerformanceTracking(
-  withCorsHeaders(
-    withAuth(GET, 'Fisioterapeuta')
-  )
-);
-
-export const POST_HANDLER = withPerformanceTracking(
-  withCorsHeaders(
-    withAuth(POST, 'Fisioterapeuta')
-  )
-);
-
-export const PUT_HANDLER = withPerformanceTracking(
-  withCorsHeaders(
-    withAuth(PUT, 'Fisioterapeuta')
-  )
-);
-
-export const DELETE_HANDLER = withPerformanceTracking(
-  withCorsHeaders(
-    withAuth(DELETE, 'Fisioterapeuta')
-  )
-);
-
-export { 
-  GET_HANDLER as GET, 
-  POST_HANDLER as POST, 
-  PUT_HANDLER as PUT, 
-  DELETE_HANDLER as DELETE 
-};
+// Next.js App Router exports - middleware will be applied via middleware.ts

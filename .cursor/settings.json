@@ -1,0 +1,37 @@
+{
+  "cursor.ai.enabled": true,
+  "cursor.ai.model": "claude-3.5-sonnet",
+  "cursor.ai.autoComplete": true,
+  "cursor.ai.codeActions": true,
+  "cursor.ai.chat": true,
+  "cursor.ai.debugging": true,
+  
+  "workbench.colorTheme": "Dark+ (default dark)",
+  "editor.fontSize": 14,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.wordWrap": "on",
+  "editor.minimap.enabled": true,
+  "editor.suggestSelection": "first",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true,
+    "source.fixAll.eslint": true
+  },
+  
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/.vercel": true
+  },
+  
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.next": true
+  }
+}

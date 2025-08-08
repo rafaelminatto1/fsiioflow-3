@@ -1,106 +1,242 @@
-// app/api/patients/route.ts - Next.js API route for patients
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '../../../middleware/auth.middleware';
-import { withCorsHeaders } from '../../../middleware/cors.middleware';
-import { withPerformanceTracking } from '../../../middleware/performance.middleware';
-import { getPatients, addPatient } from '../../../services/optimized/patientService';
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { validateAndSanitize, createPatientSchema, patientFiltersSchema } from '@/lib/validations'
+import { hashPassword } from '@/lib/auth'
 
-// GET /api/patients - List patients with pagination and filters
-async function GET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const cursor = searchParams.get('cursor');
-    const searchTerm = searchParams.get('search') || undefined;
-    const statusFilter = searchParams.get('status') || undefined;
-
-    const result = await getPatients({
-      limit,
-      cursor,
-      searchTerm,
-      statusFilter,
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: result.patients,
-      pagination: {
-        nextCursor: result.nextCursor,
-        hasMore: !!result.nextCursor,
-        totalCount: result.totalCount,
-      },
-      meta: {
-        cacheHit: result.cacheHit,
-        queryDuration: result.queryDuration,
-      },
-    });
-  } catch (error) {
-    console.error('GET /api/patients error:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch patients',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// POST /api/patients - Create new patient
-async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    
-    // Validate required fields
-    const requiredFields = ['name', 'cpf', 'birthDate', 'phone'];
-    const missingFields = requiredFields.filter(field => !body[field]);
-    
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Missing required fields',
-          details: `Required fields: ${missingFields.join(', ')}`,
-        },
-        { status: 400 }
-      );
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const newPatient = await addPatient(body);
+    // Verificar permissão
+    const userRole = session.user.role
+    if (!['ADMIN', 'FISIOTERAPEUTA', 'ESTAGIARIO'].includes(userRole)) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const filtersData = Object.fromEntries(searchParams.entries())
+    
+    // Validar filtros
+    const filters = validateAndSanitize(patientFiltersSchema, filtersData)
+
+    // Construir query
+    const where: any = {
+      isActive: filters.isActive ?? true,
+      deletedAt: null
+    }
+
+    // Filtro de busca
+    if (filters.search) {
+      where.OR = [
+        { user: { name: { contains: filters.search, mode: 'insensitive' } } },
+        { email: { contains: filters.search, mode: 'insensitive' } },
+        { cpf: { contains: filters.search.replace(/\D/g, '') } }
+      ]
+    }
+
+    // Filtro por fisioterapeuta
+    if (filters.physiotherapistId) {
+      where.appointments = {
+        some: {
+          physiotherapistId: filters.physiotherapistId
+        }
+      }
+    }
+
+    // Filtro por data
+    if (filters.startDate || filters.endDate) {
+      where.createdAt = {}
+      if (filters.startDate) {
+        where.createdAt.gte = filters.startDate
+      }
+      if (filters.endDate) {
+        where.createdAt.lte = filters.endDate
+      }
+    }
+
+    // Buscar pacientes
+    const [patients, total] = await Promise.all([
+      prisma.patient.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              avatar: true,
+              createdAt: true
+            }
+          },
+          appointments: {
+            take: 1,
+            orderBy: { dateTime: 'desc' },
+            include: {
+              physiotherapist: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              }
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: filters.limit,
+        skip: filters.offset
+      }),
+      prisma.patient.count({ where })
+    ])
+
+    return NextResponse.json({
+      patients,
+      total,
+      currentPage: Math.floor(filters.offset / filters.limit) + 1,
+      pageSize: filters.limit,
+      totalPages: Math.ceil(total / filters.limit)
+    })
+  } catch (error: any) {
+    console.error('Erro ao buscar pacientes:', error)
+    
+    if (error.errors) {
+      return NextResponse.json({
+        error: 'Filtros inválidos',
+        details: error.errors
+      }, { status: 400 })
+    }
 
     return NextResponse.json(
-      {
-        success: true,
-        data: newPatient,
-        message: 'Patient created successfully',
-      },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error('POST /api/patients error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to create patient',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Erro interno do servidor' },
       { status: 500 }
-    );
+    )
   }
 }
 
-// Apply middleware
-export const GET_HANDLER = withPerformanceTracking(
-  withCorsHeaders(
-    withAuth(GET, 'Fisioterapeuta')
-  )
-);
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
 
-export const POST_HANDLER = withPerformanceTracking(
-  withCorsHeaders(
-    withAuth(POST, 'Fisioterapeuta')
-  )
-);
+    // Verificar permissão
+    const userRole = session.user.role
+    if (!['ADMIN', 'FISIOTERAPEUTA'].includes(userRole)) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    }
 
-export { GET_HANDLER as GET, POST_HANDLER as POST };
+    const body = await request.json()
+
+    // Validar dados
+    const validatedData = validateAndSanitize(createPatientSchema, body)
+
+    // Verificar se email já existe
+    const existingUser = await prisma.user.findUnique({
+      where: { email: validatedData.user.email }
+    })
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Este email já está em uso' },
+        { status: 400 }
+      )
+    }
+
+    // Verificar se CPF já existe
+    const existingPatient = await prisma.patient.findUnique({
+      where: { cpf: validatedData.cpf.replace(/\D/g, '') }
+    })
+
+    if (existingPatient) {
+      return NextResponse.json(
+        { error: 'Este CPF já está cadastrado' },
+        { status: 400 }
+      )
+    }
+
+    // Hash da senha
+    const hashedPassword = await hashPassword(validatedData.user.password)
+
+    // Criar usuário e paciente em transação
+    const result = await prisma.$transaction(async (tx) => {
+      // Criar usuário
+      const user = await tx.user.create({
+        data: {
+          email: validatedData.user.email,
+          password: hashedPassword,
+          name: validatedData.user.name,
+          role: 'PACIENTE',
+          phone: validatedData.user.phone
+        }
+      })
+
+      // Criar paciente
+      const patient = await tx.patient.create({
+        data: {
+          userId: user.id,
+          cpf: validatedData.cpf.replace(/\D/g, ''),
+          rg: validatedData.rg,
+          birthDate: validatedData.birthDate,
+          phone: validatedData.phone,
+          email: validatedData.email,
+          emergencyContact: validatedData.emergencyContact,
+          address: validatedData.address,
+          healthInsurance: validatedData.healthInsurance,
+          medicalHistory: {},
+          currentMedications: validatedData.currentMedications,
+          allergies: validatedData.allergies,
+          profession: validatedData.profession,
+          workplace: validatedData.workplace
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              avatar: true,
+              createdAt: true
+            }
+          }
+        }
+      })
+
+      return patient
+    })
+
+    return NextResponse.json(result, { status: 201 })
+  } catch (error: any) {
+    console.error('Erro ao criar paciente:', error)
+
+    if (error.errors) {
+      return NextResponse.json({
+        error: 'Dados inválidos',
+        details: error.errors
+      }, { status: 400 })
+    }
+
+    // Erro do Prisma
+    if (error.code === 'P2002') {
+      const field = error.meta?.target?.[0]
+      const message = field === 'email' 
+        ? 'Este email já está em uso'
+        : field === 'cpf'
+        ? 'Este CPF já está cadastrado'
+        : 'Dados já existem no sistema'
+
+      return NextResponse.json({ error: message }, { status: 400 })
+    }
+
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
+  }
+}

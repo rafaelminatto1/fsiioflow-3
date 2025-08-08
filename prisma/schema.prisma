@@ -1,0 +1,582 @@
+// Schema Prisma para FisioFlow - Sistema de Gestão de Clínica de Fisioterapia
+// Otimizado para Neon PostgreSQL + Railway Deploy
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// MODELO USER - Sistema Multi-Role
+// ========================================
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  password  String   // Hash bcrypt
+  name      String
+  role      UserRole @default(PACIENTE)
+  crefito   String?  // Para fisioterapeutas
+  phone     String?
+  avatar    String?  // URL da imagem
+  
+  // Soft delete e auditoria
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos
+  patientProfile     Patient?            // Se role = PACIENTE
+  appointments       Appointment[]       @relation("AppointmentPhysio")
+  clinicalRecords    ClinicalRecord[]
+  prescriptions      Prescription[]
+  sessions           Session[]           @relation("SessionPhysio")
+  partnerProfile     Partner?
+  clinics            Clinic[]            @relation("UserClinics")
+  
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@map("users")
+}
+
+// ========================================
+// MODELO CLINIC - Clínicas
+// ========================================
+
+model Clinic {
+  id   String @id @default(uuid()) @db.Uuid
+  
+  // Informações básicas
+  name        String
+  cnpj        String  @unique
+  cnes        String? // Código Nacional de Estabelecimento de Saúde
+  
+  // Contato
+  email       String  @unique
+  phone       String
+  website     String?
+  
+  // Endereço completo
+  address     Json // { street, number, complement, district, city, state, zipCode }
+  
+  // Configurações
+  settings    Json? // Configurações específicas da clínica
+  
+  // Planos aceitos
+  acceptedInsurances String[] // Lista de planos de saúde aceitos
+  
+  // Auditoria
+  isActive    Boolean  @default(true)
+  deletedAt   DateTime?
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos - usuários podem pertencer a múltiplas clínicas
+  users       User[]   @relation("UserClinics")
+  
+  @@index([cnpj])
+  @@index([isActive])
+  @@map("clinics")
+}
+
+// ========================================
+// MODELO PATIENT - Dados Completos
+// ========================================
+
+model Patient {
+  id       String @id @default(uuid()) @db.Uuid
+  userId   String @unique @db.Uuid
+  
+  // Documentos
+  cpf      String  @unique
+  rg       String?
+  birthDate DateTime @db.Date
+  
+  // Contatos
+  phone       String
+  email       String @unique
+  emergencyContact String? // Nome e telefone
+  
+  // Endereço completo
+  address     Json // { street, number, complement, district, city, state, zipCode }
+  
+  // Plano de saúde
+  healthInsurance Json? // { name, cardNumber, expiryDate, type }
+  
+  // Informações médicas
+  medicalHistory  Json  // Histórico médico estruturado
+  currentMedications String? // Medicamentos atuais
+  allergies       String? // Alergias conhecidas
+  
+  // Informações profissionais
+  profession    String?
+  workplace     String?
+  
+  // Auditoria
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments    Appointment[]
+  clinicalRecords ClinicalRecord[]
+  bodyMaps        BodyMap[]
+  prescriptions   Prescription[]
+  sessions        Session[]
+  sharedWithPartners PartnerPatient[]
+  
+  @@index([cpf])
+  @@index([email])
+  @@index([isActive])
+  @@map("patients")
+}
+
+// ========================================
+// MODELO APPOINTMENT - Agendamentos
+// ========================================
+
+model Appointment {
+  id          String @id @default(uuid()) @db.Uuid
+  
+  // Relacionamentos principais
+  patientId      String @db.Uuid
+  physiotherapistId String @db.Uuid
+  
+  // Data e hora
+  dateTime    DateTime @db.Timestamptz
+  duration    Int      @default(60) // minutos
+  
+  // Status e tipo
+  status      AppointmentStatus @default(AGENDADO)
+  type        AppointmentType   @default(SESSAO)
+  
+  // Informações financeiras
+  value       Decimal? @db.Decimal(10, 2)
+  paymentMethod String? // DINHEIRO, CARTAO, PIX, PLANO
+  isPaid      Boolean  @default(false)
+  
+  // Observações
+  notes       String?
+  observations String? // Observações pós-consulta
+  
+  // Auditoria
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos
+  patient        Patient @relation(fields: [patientId], references: [id])
+  physiotherapist User   @relation("AppointmentPhysio", fields: [physiotherapistId], references: [id])
+  session        Session?
+  
+  @@index([patientId])
+  @@index([physiotherapistId])
+  @@index([dateTime])
+  @@index([status])
+  @@index([type])
+  @@map("appointments")
+}
+
+// ========================================
+// MODELO SESSION - Sessões de Fisioterapia
+// ========================================
+
+model Session {
+  id            String @id @default(uuid()) @db.Uuid
+  appointmentId String @unique @db.Uuid
+  patientId     String @db.Uuid
+  physiotherapistId String @db.Uuid
+  
+  // Dados da sessão
+  sessionNumber Int // Número sequencial da sessão
+  objectives    String[] // Objetivos da sessão
+  
+  // Procedimentos realizados
+  procedures    Json // Procedimentos estruturados
+  techniques    String[] // Técnicas utilizadas
+  
+  // Evolução e observações
+  patientResponse String? // Resposta do paciente
+  evolution     String? // Evolução observada
+  painBefore    Int? // Dor antes da sessão (0-10)
+  painAfter     Int? // Dor após a sessão (0-10)
+  
+  // Exercícios realizados
+  exercisesPerformed Json? // Exercícios feitos na sessão
+  
+  // Orientações
+  homeExercises String? // Exercícios para casa
+  recommendations String? // Recomendações gerais
+  
+  // Próxima sessão
+  nextSessionPlan String? // Planejamento para próxima sessão
+  
+  // Auditoria
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos
+  appointment     Appointment @relation(fields: [appointmentId], references: [id])
+  patient         Patient     @relation(fields: [patientId], references: [id])
+  physiotherapist User        @relation("SessionPhysio", fields: [physiotherapistId], references: [id])
+  
+  @@index([patientId])
+  @@index([physiotherapistId])
+  @@index([sessionNumber])
+  @@map("sessions")
+}
+
+// ========================================
+// MODELO CLINICAL_RECORD - Prontuário
+// ========================================
+
+model ClinicalRecord {
+  id        String @id @default(uuid()) @db.Uuid
+  patientId String @db.Uuid
+  physiotherapistId String @db.Uuid
+  
+  // Avaliação inicial
+  initialAssessment Json // Avaliação estruturada
+  
+  // Diagnóstico e objetivos
+  diagnosis     String
+  objectives    String[] // Array de objetivos
+  
+  // Plano de tratamento
+  treatmentPlan Json // Plano estruturado
+  
+  // Evolução (histórico)
+  evolution     Json[] // Array de evoluções com data
+  
+  // Testes e medidas
+  tests         Json? // Testes funcionais, amplitude de movimento, etc.
+  
+  // Auditoria
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos
+  patient         Patient @relation(fields: [patientId], references: [id])
+  physiotherapist User    @relation(fields: [physiotherapistId], references: [id])
+  
+  @@index([patientId])
+  @@index([physiotherapistId])
+  @@map("clinical_records")
+}
+
+// ========================================
+// MODELO BODY_MAP - Mapa Corporal de Dor
+// ========================================
+
+model BodyMap {
+  id        String @id @default(uuid()) @db.Uuid
+  patientId String @db.Uuid
+  
+  // Coordenadas usando tipo POINT nativo PostgreSQL
+  coordinates String @db.Point // Formato: (x,y) - coordenadas em porcentagem
+  x         Float // Mantido para facilitar queries
+  y         Float // Mantido para facilitar queries
+  
+  // Características da dor
+  intensity Int      // 0-10
+  painType  PainType @default(DOR)
+  side      BodySide @default(FRONT)
+  bodyPart  String   // ex: "shoulder", "knee", "back"
+  
+  // Descrição e contexto
+  description String?
+  notes       String?
+  
+  // Data do registro
+  recordedAt  DateTime @default(now()) @db.Timestamptz
+  
+  // Auditoria
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos
+  patient Patient @relation(fields: [patientId], references: [id])
+  
+  @@index([patientId])
+  @@index([recordedAt])
+  @@index([intensity])
+  @@index([bodyPart])
+  @@map("body_maps")
+}
+
+// ========================================
+// MODELO EXERCISE - Biblioteca de Exercícios
+// ========================================
+
+model Exercise {
+  id          String @id @default(uuid()) @db.Uuid
+  
+  // Informações básicas
+  name        String
+  category    ExerciseCategory
+  description String
+  
+  // Instruções
+  instructions String
+  videoUrl     String? // URL do vídeo demonstrativo
+  imageUrl     String? // URL da imagem
+  
+  // Parâmetros padrão
+  defaultSets     Int     @default(3)
+  defaultReps     String  @default("10-15") // Pode ser "10-15" ou "30 segundos"
+  defaultRest     Int     @default(60) // segundos
+  
+  // Indicações e contraindicações
+  indications      String[]
+  contraindications String[]
+  
+  // Equipamentos necessários
+  equipment        String[] // Array de equipamentos
+  
+  // Nível de dificuldade
+  difficulty       Int @default(1) // 1-5
+  
+  // Auditoria
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos
+  prescriptionExercises PrescriptionExercise[]
+  
+  @@index([category])
+  @@index([difficulty])
+  @@index([isActive])
+  @@map("exercises")
+}
+
+// ========================================
+// MODELO PRESCRIPTION - Prescrições
+// ========================================
+
+model Prescription {
+  id        String @id @default(uuid()) @db.Uuid
+  patientId String @db.Uuid
+  physiotherapistId String @db.Uuid
+  
+  // Informações da prescrição
+  title       String
+  description String?
+  
+  // Período
+  startDate   DateTime @db.Date
+  endDate     DateTime? @db.Date
+  
+  // Frequência geral
+  frequency   String // "3x por semana", "Diário", etc.
+  
+  // Observações gerais
+  generalNotes String?
+  
+  // Status
+  status      PrescriptionStatus @default(ACTIVE)
+  
+  // Auditoria
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos
+  patient         Patient               @relation(fields: [patientId], references: [id])
+  physiotherapist User                  @relation(fields: [physiotherapistId], references: [id])
+  exercises       PrescriptionExercise[]
+  
+  @@index([patientId])
+  @@index([physiotherapistId])
+  @@index([status])
+  @@map("prescriptions")
+}
+
+// ========================================
+// MODELO PRESCRIPTION_EXERCISE - Exercícios da Prescrição
+// ========================================
+
+model PrescriptionExercise {
+  id             String @id @default(uuid()) @db.Uuid
+  prescriptionId String @db.Uuid
+  exerciseId     String @db.Uuid
+  
+  // Parâmetros específicos
+  sets           Int
+  reps           String // "10-15", "30 segundos", etc.
+  rest           Int    // segundos
+  
+  // Instruções específicas
+  specificNotes  String?
+  
+  // Ordem na prescrição
+  order          Int    @default(1)
+  
+  // Auditoria
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  exercise     Exercise     @relation(fields: [exerciseId], references: [id])
+  
+  @@unique([prescriptionId, exerciseId])
+  @@index([prescriptionId])
+  @@index([exerciseId])
+  @@map("prescription_exercises")
+}
+
+// ========================================
+// MODELO PARTNER - Parceiros (Educadora Física)
+// ========================================
+
+model Partner {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @unique @db.Uuid
+  
+  // Informações profissionais
+  cref         String  @unique // Registro CREF
+  specialty    String[] // Especialidades
+  
+  // Dados comerciais
+  serviceValue Decimal? @db.Decimal(10, 2)
+  commission   Decimal? @db.Decimal(5, 2) // Porcentagem
+  
+  // Informações adicionais
+  bio          String?
+  experience   String? // Anos de experiência
+  
+  // Disponibilidade
+  availability Json? // Horários disponíveis
+  
+  // Auditoria
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sharedPatients PartnerPatient[]
+  
+  @@index([cref])
+  @@index([isActive])
+  @@map("partners")
+}
+
+// ========================================
+// MODELO PARTNER_PATIENT - Pacientes Compartilhados
+// ========================================
+
+model PartnerPatient {
+  id        String @id @default(uuid()) @db.Uuid
+  partnerId String @db.Uuid
+  patientId String @db.Uuid
+  
+  // Status do compartilhamento
+  status    PartnerStatus @default(ACTIVE)
+  notes     String?
+  
+  // Período de compartilhamento
+  startDate DateTime @db.Date
+  endDate   DateTime? @db.Date
+  
+  // Auditoria
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  
+  // Relacionamentos
+  partner Partner @relation(fields: [partnerId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id])
+  
+  @@unique([partnerId, patientId])
+  @@index([partnerId])
+  @@index([patientId])
+  @@index([status])
+  @@map("partner_patients")
+}
+
+// ========================================
+// ENUMS
+// ========================================
+
+enum UserRole {
+  ADMIN
+  FISIOTERAPEUTA
+  ESTAGIARIO
+  PACIENTE
+  PARCEIRO
+}
+
+enum AppointmentStatus {
+  AGENDADO
+  CONFIRMADO
+  ATENDIDO
+  FALTOU
+  CANCELADO
+  REAGENDADO
+}
+
+enum AppointmentType {
+  AVALIACAO
+  SESSAO
+  RETORNO
+  REAVALIACAO
+}
+
+enum PainType {
+  DOR
+  DESCONFORTO
+  RIGIDEZ
+  FORMIGAMENTO
+  DORMENCIA
+  QUEIMACAO
+}
+
+enum BodySide {
+  FRONT
+  BACK
+}
+
+enum ExerciseCategory {
+  MOBILIZACAO_NEURAL
+  CERVICAL
+  MEMBROS_SUPERIORES
+  TRONCO
+  MEMBROS_INFERIORES
+  FORTALECIMENTO
+  ALONGAMENTO
+  PROPRIOCEPCAO
+  CARDIORRESPIRATORIO
+  FUNCIONAL
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  CANCELLED
+}
+
+enum PartnerStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}

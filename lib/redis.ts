@@ -27,7 +27,6 @@ export function getRedisClient(): Redis | null {
   if (!redisClient) {
     try {
       redisClient = new Redis(REDIS_URL, {
-        retryDelayOnFailover: 100,
         enableReadyCheck: false,
         maxRetriesPerRequest: 3,
         lazyConnect: true,

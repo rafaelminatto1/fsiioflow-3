@@ -1,53 +1,134 @@
-// app/api/body-map/route.ts - CRUD for Body Map evolutions
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '../../../middleware/auth.middleware';
-import { withCorsHeaders } from '../../../middleware/cors.middleware';
-import { withPerformanceTracking } from '../../../middleware/performance.middleware';
-import { createEvolution, getEvolutions, getPresetFromLastEvolution } from '../../../services/bodyMapService';
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { validateAndSanitize, createBodyMapSchema } from '@/lib/validations'
+import { coordinatesToPoint } from '@/lib/utils'
 
-async function GET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const patientId = searchParams.get('patientId');
-    const preset = searchParams.get('preset') === 'true';
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const patientId = searchParams.get('patientId')
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
+    const minIntensity = searchParams.get('minIntensity')
+    const maxIntensity = searchParams.get('maxIntensity')
+    const bodyPart = searchParams.get('bodyPart')
+    const side = searchParams.get('side')
+
     if (!patientId) {
-      return NextResponse.json({ success: false, error: 'patientId is required' }, { status: 400 });
+      return NextResponse.json({ error: 'ID do paciente é obrigatório' }, { status: 400 })
     }
 
-    if (preset) {
-      const data = await getPresetFromLastEvolution(patientId);
-      return NextResponse.json({ success: true, data });
+    // Verificar permissão para acessar dados do paciente
+    const userRole = session.user.role
+    if (userRole === 'PACIENTE' && session.user.id !== patientId) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
     }
 
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const startDate = searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : undefined;
-    const endDate = searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined;
-    const data = await getEvolutions({ patientId, startDate, endDate, limit });
-    return NextResponse.json({ success: true, data });
+    // Construir filtros
+    const where: any = {
+      patientId,
+      isActive: true,
+      deletedAt: null
+    }
+
+    if (startDate && endDate) {
+      where.recordedAt = {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      }
+    }
+
+    if (minIntensity !== null && maxIntensity !== null) {
+      where.intensity = {
+        gte: parseInt(minIntensity || '0'),
+        lte: parseInt(maxIntensity || '10')
+      }
+    }
+
+    if (bodyPart) {
+      where.bodyPart = {
+        contains: bodyPart,
+        mode: 'insensitive'
+      }
+    }
+
+    if (side) {
+      where.side = side
+    }
+
+    // Buscar pontos de dor
+    const painPoints = await prisma.bodyMap.findMany({
+      where,
+      orderBy: { recordedAt: 'desc' },
+      take: 100 // Limitar para evitar sobrecarga
+    })
+
+    return NextResponse.json(painPoints)
   } catch (error) {
-    console.error('GET /api/body-map error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to fetch body map evolutions' }, { status: 500 });
+    console.error('Erro ao buscar pontos de dor:', error)
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
   }
 }
 
-async function POST(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { patientId, regions } = body || {};
-    if (!patientId || !Array.isArray(regions) || regions.length === 0) {
-      return NextResponse.json({ success: false, error: 'patientId and non-empty regions are required' }, { status: 400 });
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
-    const result = await createEvolution(body);
-    return NextResponse.json({ success: true, data: result }, { status: 201 });
-  } catch (error) {
-    console.error('POST /api/body-map error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to create evolution' }, { status: 500 });
+
+    // Verificar permissão para criar pontos de dor
+    const userRole = session.user.role
+    if (!['ADMIN', 'FISIOTERAPEUTA', 'ESTAGIARIO'].includes(userRole)) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    }
+
+    const body = await request.json()
+
+    // Validar dados
+    const validatedData = validateAndSanitize(createBodyMapSchema, {
+      ...body,
+      coordinates: coordinatesToPoint(body.x, body.y)
+    })
+
+    // Verificar se o paciente existe
+    const patient = await prisma.patient.findUnique({
+      where: { id: validatedData.patientId, isActive: true }
+    })
+
+    if (!patient) {
+      return NextResponse.json({ error: 'Paciente não encontrado' }, { status: 404 })
+    }
+
+    // Criar ponto de dor
+    const painPoint = await prisma.bodyMap.create({
+      data: validatedData
+    })
+
+    return NextResponse.json(painPoint, { status: 201 })
+  } catch (error: any) {
+    console.error('Erro ao criar ponto de dor:', error)
+
+    if (error.errors) {
+      return NextResponse.json({
+        error: 'Dados inválidos',
+        details: error.errors
+      }, { status: 400 })
+    }
+
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
   }
 }
-
-export const GET_HANDLER = withPerformanceTracking(withCorsHeaders(withAuth(GET, 'Fisioterapeuta')));
-export const POST_HANDLER = withPerformanceTracking(withCorsHeaders(withAuth(POST, 'Fisioterapeuta')));
-
-export { GET_HANDLER as GET, POST_HANDLER as POST };
-
-

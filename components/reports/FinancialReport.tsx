@@ -1,10 +1,6 @@
 
-<<<<<<< Current (Your changes)
-import React, { useMemo } from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-=======
 import React, { useMemo, useEffect, useState } from 'react';
->>>>>>> Incoming (Background Agent changes)
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Appointment, Therapist, AppointmentStatus } from '../../types';
 import StatCard from '../dashboard/StatCard';
 import { DollarSign, BarChart2, CheckCircle, Clock } from 'lucide-react';

@@ -236,3 +236,5 @@ access.log
 # IDE specific
 .fleet/
 .lapce/
+
+.vercel
