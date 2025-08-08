@@ -1,6 +1,5 @@
 // pages/FinancialDashboardPage.tsx
-import React, { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import React, { useState, useEffect } from 'react';
 import useFinancialData, { TimePeriod } from '../hooks/useFinancialData';
 import PageLoader from '../components/ui/PageLoader';
 import { PlusCircle } from 'lucide-react';
@@ -18,6 +17,13 @@ const FinancialDashboardPage: React.FC = () => {
   const { data, transactions, isLoading, refetch } = useFinancialData(period);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState<FinancialTransaction | undefined>(undefined);
+  const [Recharts, setRecharts] = useState<any>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then(mod => { if (mounted) setRecharts(mod); });
+    return () => { mounted = false; };
+  }, []);
 
   const formatCurrency = (value: number) => `R$ ${value.toFixed(2).replace('.', ',')}`;
   
@@ -50,6 +56,8 @@ const FinancialDashboardPage: React.FC = () => {
   if (isLoading || !data) {
     return <PageLoader />;
   }
+
+  const { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } = Recharts || {} as any;
 
   return (
     <div className="space-y-8">
@@ -90,31 +98,43 @@ const FinancialDashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm">
           <h2 className="text-lg font-semibold mb-4 text-slate-800">Fluxo de Caixa</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data.cashFlowData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" fontSize={12} />
-              <YAxis fontSize={12} tickFormatter={(value: number) => `R$${value/1000}k`}/>
-              <Tooltip formatter={(value: number) => formatCurrency(value)}/>
-              <Legend />
-              <Line type="monotone" dataKey="Receita" stroke="#10b981" strokeWidth={2}/>
-              <Line type="monotone" dataKey="Despesa" stroke="#f43f5e" strokeWidth={2}/>
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="h-[300px]">
+            {!Recharts ? (
+              <div className="h-full flex items-center justify-center text-slate-400 text-sm">Carregando gráficos...</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data.cashFlowData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" fontSize={12} />
+                  <YAxis fontSize={12} tickFormatter={(value: number) => `R$${value/1000}k`}/>
+                  <Tooltip formatter={(value: number) => formatCurrency(value)}/>
+                  <Legend />
+                  <Line type="monotone" dataKey="Receita" stroke="#10b981" strokeWidth={2}/>
+                  <Line type="monotone" dataKey="Despesa" stroke="#f43f5e" strokeWidth={2}/>
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
         </div>
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm">
           <h2 className="text-lg font-semibold mb-4 text-slate-800">Composição das Despesas</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie data={data.expenseBreakdown} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} fill="#8884d8" paddingAngle={5} label>
-                {data.expenseBreakdown.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value: number) => formatCurrency(value)}/>
-               <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="h-[300px]">
+            {!Recharts ? (
+              <div className="h-full flex items-center justify-center text-slate-400 text-sm">Carregando gráficos...</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={data.expenseBreakdown} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} fill="#8884d8" paddingAngle={5} label>
+                    {data.expenseBreakdown.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => formatCurrency(value)}/>
+                   <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
         </div>
       </div>
       

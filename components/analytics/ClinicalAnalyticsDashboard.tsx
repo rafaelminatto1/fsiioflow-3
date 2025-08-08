@@ -1,6 +1,5 @@
 // components/analytics/ClinicalAnalyticsDashboard.tsx
-import React from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import React, { useEffect, useState } from 'react';
 import useClinicalAnalytics from '../../hooks/useClinicalAnalytics';
 import MetricCard from './MetricCard';
 import { HeartPulse, TrendingUp, Smile } from 'lucide-react';
@@ -8,6 +7,13 @@ import Skeleton from '../ui/Skeleton';
 
 const ClinicalAnalyticsDashboard: React.FC = () => {
   const { kpis, painEvolution, successByPathology, isLoading } = useClinicalAnalytics();
+  const [Recharts, setRecharts] = useState<any>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then(mod => { if (mounted) setRecharts(mod); });
+    return () => { mounted = false; };
+  }, []);
 
   if (isLoading) {
     return (
@@ -26,6 +32,24 @@ const ClinicalAnalyticsDashboard: React.FC = () => {
   }
   
   const COLORS = ['#14b8a6', '#38bdf8', '#fbbf24', '#f87171', '#8b5cf6'];
+
+  if (!Recharts) {
+    return (
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <MetricCard title="Taxa de Alta (90d)" value={`${kpis?.dischargeRate}%`} icon={<TrendingUp />} />
+          <MetricCard title="Média de Sessões / Tratamento" value={kpis?.avgSessions.toString() || 'N/A'} icon={<HeartPulse />} />
+          <MetricCard title="NPS (Satisfação)" value={kpis?.npsScore.toString() || 'N/A'} icon={<Smile />} />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm h-80 flex items-center justify-center text-slate-400 text-sm">Carregando gráficos...</div>
+          <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm h-80 flex items-center justify-center text-slate-400 text-sm">Carregando gráficos...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } = Recharts;
 
   return (
     <div className="space-y-8">

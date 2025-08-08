@@ -1,8 +1,6 @@
 // services/reportService.ts
 import { MedicalReport, Patient } from '../types';
 import { mockMedicalReports, mockUsers, mockPatients, mockSoapNotes, mockClinicInfo, mockTherapists } from '../data/mockData';
-import { GoogleGenAI } from "@google/genai";
-import html2pdf from 'html2pdf.js/';
 
 if (!process.env.API_KEY) {
   // In a real app, you might have a fallback or a more user-friendly error.
@@ -10,8 +8,15 @@ if (!process.env.API_KEY) {
   console.error("API_KEY is not set in environment variables.");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-
+// Lazily create the AI client only when needed to avoid adding it to the main bundle
+let cachedAiClient: any | null = null;
+async function getAiClient() {
+  if (cachedAiClient) return cachedAiClient;
+  const mod: any = await import('@google/genai');
+  const GoogleGenAI = mod.GoogleGenAI || mod.GoogleGenerativeAI || mod.default;
+  cachedAiClient = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+  return cachedAiClient;
+}
 
 let reports: MedicalReport[] = [...mockMedicalReports];
 
@@ -72,6 +77,7 @@ export const generateReport = async (patientId: string, recipientDoctor: string,
     `;
     
     try {
+         const ai = await getAiClient();
          const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
@@ -171,5 +177,6 @@ export const generatePdf = async (report: MedicalReport, patient: Patient): Prom
         jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
 
+    const html2pdf = (await import('html2pdf.js')).default;
     return html2pdf().set(opt).from(pdfElement).save();
 };
