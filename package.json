@@ -1,0 +1,33 @@
+{
+  "name": "copy-of-gestao-de-clinica-07-08-noite",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.7.1",
+    "lucide-react": "^0.534.0",
+    "@google/genai": "^1.12.0",
+    "recharts": "^3.1.0",
+    "@testing-library/react": "^16.3.0",
+    "vitest": "^3.2.4",
+    "react-hook-form": "^7.52.1",
+    "zod": "^3.23.8",
+    "axios": "^1.7.2",
+    "@hookform/resolvers": "^5.2.1",
+    "@testing-library/jest-dom": "^6.6.4",
+    "html2pdf.js": "^0.10.3",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
